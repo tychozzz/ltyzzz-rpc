@@ -1,4 +1,4 @@
-package com.ltyzzz.rpc.client;
+package com.ltyzzz.client;
 
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;

@@ -9,11 +9,10 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>simple-rpc</artifactId>
-
-    <properties>
-        <maven.compiler.source>8</maven.compiler.source>
-        <maven.compiler.target>8</maven.compiler.target>
-    </properties>
+    <artifactId>irpc-framework</artifactId>
+    <packaging>pom</packaging>
+    <modules>
+        <module>irpc-framework-core</module>
+    </modules>
 
 </project>

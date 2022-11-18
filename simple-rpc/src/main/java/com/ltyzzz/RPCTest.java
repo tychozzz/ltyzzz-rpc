@@ -1,10 +1,10 @@
-package com.ltyzzz.rpc;
+package com.ltyzzz;
 
-import com.ltyzzz.rpc.client.RPCClient;
-import com.ltyzzz.rpc.server.Server;
-import com.ltyzzz.rpc.server.ServiceCenter;
-import com.ltyzzz.rpc.service.HelloService;
-import com.ltyzzz.rpc.service.HelloServiceImpl;
+import com.ltyzzz.client.RPCClient;
+import com.ltyzzz.server.Server;
+import com.ltyzzz.server.ServiceCenter;
+import com.ltyzzz.service.HelloService;
+import com.ltyzzz.service.HelloServiceImpl;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;

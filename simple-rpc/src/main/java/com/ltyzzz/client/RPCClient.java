@@ -1,4 +1,4 @@
-package com.ltyzzz.rpc.client;
+package com.ltyzzz.client;
 
 import java.lang.reflect.Proxy;
 import java.net.InetSocketAddress;

@@ -1,4 +1,4 @@
-package com.ltyzzz.rpc.service;
+package com.ltyzzz.service;
 
 public class HelloServiceImpl implements HelloService {
 

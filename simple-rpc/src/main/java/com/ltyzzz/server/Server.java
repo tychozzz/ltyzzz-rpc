@@ -1,4 +1,4 @@
-package com.ltyzzz.rpc.server;
+package com.ltyzzz.server;
 
 import java.io.IOException;
 
