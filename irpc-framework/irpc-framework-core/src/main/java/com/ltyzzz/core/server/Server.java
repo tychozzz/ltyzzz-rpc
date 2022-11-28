@@ -2,7 +2,12 @@ package com.ltyzzz.core.server;
 
 import com.ltyzzz.core.common.RpcDecoder;
 import com.ltyzzz.core.common.RpcEncoder;
+import com.ltyzzz.core.common.config.PropertiesBootstrap;
 import com.ltyzzz.core.common.config.ServerConfig;
+import com.ltyzzz.core.common.utils.CommonUtils;
+import com.ltyzzz.core.registry.RegistryService;
+import com.ltyzzz.core.registry.URL;
+import com.ltyzzz.core.registry.zookeeper.ZookeeperRegister;
 import com.ltyzzz.core.service.DataServiceImpl;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelInitializer;
@@ -13,12 +18,15 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 
 import static com.ltyzzz.core.common.cache.CommonServerCache.PROVIDER_CLASS_MAP;
+import static com.ltyzzz.core.common.cache.CommonServerCache.PROVIDER_URL_SET;
 
 public class Server {
 
     private static EventLoopGroup bossGroup = null;
     private static EventLoopGroup workerGroup = null;
     private ServerConfig serverConfig;
+
+    private RegistryService registryService;
 
     public ServerConfig getServerConfig() {
         return serverConfig;
@@ -48,27 +56,69 @@ public class Server {
                 channel.pipeline().addLast(new ServerHandler());
             }
         });
-        bootstrap.bind(serverConfig.getPort()).sync();
+        this.batchExportUrl();
+        bootstrap.bind(serverConfig.getServerPort()).sync();
     }
 
-    public void registryService(Object serviceBean) {
-        Class<?>[] interfaces = serviceBean.getClass().getInterfaces();
-        if (interfaces.length == 0) {
+    public void initServerConfig() {
+        ServerConfig serverConfig = PropertiesBootstrap.loadServerConfigFromLocal();
+        this.setServerConfig(serverConfig);
+    }
+
+    public void exportService(Object serviceBean) {
+        Class<?>[] classes = serviceBean.getClass().getInterfaces();
+        if (classes.length == 0) {
             throw new RuntimeException("service must had interfaces!");
         }
-        if (interfaces.length > 1) {
+        if (classes.length > 1) {
             throw new RuntimeException("service must only had one interfaces!");
         }
-        Class interfaceClass = interfaces[0];
+        if (registryService == null) {
+            registryService = new ZookeeperRegister(serverConfig.getRegisterAddr());
+        }
+        Class interfaceClass = classes[0];
         PROVIDER_CLASS_MAP.put(interfaceClass.getName(), serviceBean);
+        URL url = new URL();
+        url.setServiceName(interfaceClass.getName());
+        url.setApplicationName(serverConfig.getApplicationName());
+        url.addParameter("host", CommonUtils.getIpAddress());
+        url.addParameter("port", String.valueOf(serverConfig.getServerPort()));
+        PROVIDER_URL_SET.add(url);
     }
+
+    private void batchExportUrl() {
+        Thread task = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(2500);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                for (URL url : PROVIDER_URL_SET) {
+                    registryService.register(url);
+                }
+            }
+        });
+        task.start();
+    }
+
+    //public void registryService(Object serviceBean) {
+    //    Class<?>[] interfaces = serviceBean.getClass().getInterfaces();
+    //    if (interfaces.length == 0) {
+    //        throw new RuntimeException("service must had interfaces!");
+    //    }
+    //    if (interfaces.length > 1) {
+    //        throw new RuntimeException("service must only had one interfaces!");
+    //    }
+    //    Class interfaceClass = interfaces[0];
+    //    PROVIDER_CLASS_MAP.put(interfaceClass.getName(), serviceBean);
+    //}
 
     public static void main(String[] args) throws InterruptedException {
         Server server = new Server();
-        ServerConfig serverConfig = new ServerConfig();
-        serverConfig.setPort(9090);
-        server.setServerConfig(serverConfig);
-        server.registryService(new DataServiceImpl());
+        server.initServerConfig();
+        server.exportService(new DataServiceImpl());
         server.startApplication();
     }
 }
