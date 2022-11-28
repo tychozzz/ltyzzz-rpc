@@ -1,0 +1,16 @@
+package com.ltyzzz.server;
+
+import java.io.IOException;
+
+public interface Server {
+
+    public void stop();
+
+    public void start() throws IOException;
+
+    public void register(Class service, Class serviceImpl);
+
+    public boolean isRunning();
+
+    public int getPort();
+}
