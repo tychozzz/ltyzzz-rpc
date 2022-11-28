@@ -1,5 +1,6 @@
 package com.ltyzzz.core.common.cache;
 
+import com.ltyzzz.core.registry.RegistryService;
 import com.ltyzzz.core.registry.URL;
 
 import java.util.HashMap;
@@ -11,4 +12,5 @@ public class CommonServerCache {
 
     public static final Map<String,Object> PROVIDER_CLASS_MAP = new HashMap<>();
     public static final Set<URL> PROVIDER_URL_SET = new HashSet<>();
+    public static RegistryService REGISTRY_SERVICE;
 }

@@ -5,10 +5,12 @@ import com.ltyzzz.core.common.RpcEncoder;
 import com.ltyzzz.core.common.config.PropertiesBootstrap;
 import com.ltyzzz.core.common.config.ServerConfig;
 import com.ltyzzz.core.common.utils.CommonUtils;
+import com.ltyzzz.core.event.IRpcListenerLoader;
 import com.ltyzzz.core.registry.RegistryService;
 import com.ltyzzz.core.registry.URL;
 import com.ltyzzz.core.registry.zookeeper.ZookeeperRegister;
 import com.ltyzzz.core.service.DataServiceImpl;
+import com.ltyzzz.core.service.UserServiceImpl;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
@@ -17,16 +19,14 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 
-import static com.ltyzzz.core.common.cache.CommonServerCache.PROVIDER_CLASS_MAP;
-import static com.ltyzzz.core.common.cache.CommonServerCache.PROVIDER_URL_SET;
+import static com.ltyzzz.core.common.cache.CommonServerCache.*;
 
 public class Server {
 
     private static EventLoopGroup bossGroup = null;
     private static EventLoopGroup workerGroup = null;
     private ServerConfig serverConfig;
-
-    private RegistryService registryService;
+    private static IRpcListenerLoader iRpcListenerLoader;
 
     public ServerConfig getServerConfig() {
         return serverConfig;
@@ -73,8 +73,8 @@ public class Server {
         if (classes.length > 1) {
             throw new RuntimeException("service must only had one interfaces!");
         }
-        if (registryService == null) {
-            registryService = new ZookeeperRegister(serverConfig.getRegisterAddr());
+        if (REGISTRY_SERVICE == null) {
+            REGISTRY_SERVICE = new ZookeeperRegister(serverConfig.getRegisterAddr());
         }
         Class interfaceClass = classes[0];
         PROVIDER_CLASS_MAP.put(interfaceClass.getName(), serviceBean);
@@ -96,7 +96,7 @@ public class Server {
                     e.printStackTrace();
                 }
                 for (URL url : PROVIDER_URL_SET) {
-                    registryService.register(url);
+                    REGISTRY_SERVICE.register(url);
                 }
             }
         });
@@ -118,7 +118,11 @@ public class Server {
     public static void main(String[] args) throws InterruptedException {
         Server server = new Server();
         server.initServerConfig();
+        iRpcListenerLoader = new IRpcListenerLoader();
+        iRpcListenerLoader.init();
         server.exportService(new DataServiceImpl());
+        server.exportService(new UserServiceImpl());
+        ApplicationShutdownHook.registryShutdownHook();
         server.startApplication();
     }
 }

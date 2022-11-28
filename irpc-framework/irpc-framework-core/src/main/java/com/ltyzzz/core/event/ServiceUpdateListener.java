@@ -3,6 +3,7 @@ package com.ltyzzz.core.event;
 import com.ltyzzz.core.client.ConnectionHandler;
 import com.ltyzzz.core.common.ChannelFutureWrapper;
 import com.ltyzzz.core.common.utils.CommonUtils;
+import com.ltyzzz.core.rooter.Selector;
 import io.netty.channel.ChannelFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,6 +14,7 @@ import java.util.List;
 import java.util.Set;
 
 import static com.ltyzzz.core.common.cache.CommonClientCache.CONNECT_MAP;
+import static com.ltyzzz.core.common.cache.CommonClientCache.IROUTER;
 
 public class ServiceUpdateListener implements IRpcListener<IRpcUpdateEvent> {
 
@@ -57,6 +59,9 @@ public class ServiceUpdateListener implements IRpcListener<IRpcUpdateEvent> {
             }
             finalChannelFutureWrappers.addAll(newChannelFutureWrapper);
             CONNECT_MAP.put(urlChangeWrapper.getServiceName(), finalChannelFutureWrappers);
+            Selector selector = new Selector();
+            selector.setProviderServiceName(urlChangeWrapper.getServiceName());
+            IROUTER.refreshRouteArr(selector);
         }
     }
 }

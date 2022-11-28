@@ -13,6 +13,8 @@ import com.ltyzzz.core.proxy.JDKProxyFactory;
 import com.ltyzzz.core.registry.URL;
 import com.ltyzzz.core.registry.zookeeper.AbstractRegister;
 import com.ltyzzz.core.registry.zookeeper.ZookeeperRegister;
+import com.ltyzzz.core.rooter.RandomRouterImpl;
+import com.ltyzzz.core.rooter.RotateRouterImpl;
 import com.ltyzzz.core.service.DataService;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
@@ -26,9 +28,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Map;
 
-import static com.ltyzzz.core.common.cache.CommonClientCache.SEND_QUEUE;
-import static com.ltyzzz.core.common.cache.CommonClientCache.SUBSCRIBE_SERVICE_LIST;
+import static com.ltyzzz.core.common.cache.CommonClientCache.*;
+import static com.ltyzzz.core.common.constants.RpcConstants.RANDOM_ROUTER_TYPE;
+import static com.ltyzzz.core.common.constants.RpcConstants.ROTATE_ROUTER_TYPE;
 
 public class Client {
 
@@ -83,21 +87,24 @@ public class Client {
         url.setApplicationName(clientConfig.getApplicationName());
         url.setServiceName(serviceBean.getName());
         url.addParameter("host", CommonUtils.getIpAddress());
+        Map<String, String> result = abstractRegister.getServiceWeightMap(serviceBean.getName());
+        URL_MAP.put(serviceBean.getName(), result);
         abstractRegister.subscribe(url);
     }
 
     public void doConnectServer() {
-        for (String providerServiceName : SUBSCRIBE_SERVICE_LIST) {
-            List<String> providerIps = abstractRegister.getProviderIps(providerServiceName);
+        for (URL providerURL : SUBSCRIBE_SERVICE_LIST) {
+            List<String> providerIps = abstractRegister.getProviderIps(providerURL.getServiceName());
             for (String providerIp : providerIps) {
                 try {
-                    ConnectionHandler.connect(providerServiceName, providerIp);
+                    ConnectionHandler.connect(providerURL.getServiceName(), providerIp);
                 } catch (InterruptedException e) {
                     logger.error("[doConnectServer] connect fail ", e);
                 }
             }
             URL url = new URL();
-            url.setServiceName(providerServiceName);
+            url.addParameter("servicePath", providerURL.getServiceName() + "/provider");
+            url.addParameter("providerIps", JSON.toJSONString(providerIps));
             // 开启监听
             abstractRegister.doAfterSubscribe(url);
         }
@@ -129,6 +136,7 @@ public class Client {
     public static void main(String[] args) throws Throwable {
         Client client = new Client();
         RpcReference rpcReference = client.initClientApplication();
+        client.initClientConfig();
         DataService dataService = rpcReference.getProxy(DataService.class);
         client.doSubscribeService(DataService.class);
         ConnectionHandler.setBootstrap(client.getBootstrap());
@@ -140,9 +148,19 @@ public class Client {
                 String result = dataService.sendData("test");
                 System.out.println(result);
                 Thread.sleep(1000);
-            }catch (Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    private void initClientConfig() {
+        //初始化路由策略
+        String routerStrategy = clientConfig.getRouterStrategy();
+        if (RANDOM_ROUTER_TYPE.equals(routerStrategy)) {
+            IROUTER = new RandomRouterImpl();
+        } else if (ROTATE_ROUTER_TYPE.equals(routerStrategy)) {
+            IROUTER = new RotateRouterImpl();
         }
     }
 }

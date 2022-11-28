@@ -24,7 +24,7 @@ public class URL {
         return new String((url.getApplicationName() + ";" +
                 url.getServiceName() + ";" +
                 host + ":" + port + ";" +
-                System.currentTimeMillis()).getBytes(),
+                System.currentTimeMillis() + ";100").getBytes(),
                 StandardCharsets.UTF_8
         );
     }
@@ -42,8 +42,10 @@ public class URL {
     public static ProviderNodeInfo buildURLFromUrlStr(String providerNodeStr) {
         String[] items = providerNodeStr.split("/");
         ProviderNodeInfo info = new ProviderNodeInfo();
-        info.setServiceName(items[2]);
-        info.setAddress(items[4]);
+        info.setServiceName(items[1]);
+        info.setAddress(items[2]);
+        info.setRegistryTime(items[3]);
+        info.setWeight(Integer.valueOf(items[4]));
         return info;
     }
 

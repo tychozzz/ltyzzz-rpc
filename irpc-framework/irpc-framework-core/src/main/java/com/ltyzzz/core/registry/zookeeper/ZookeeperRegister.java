@@ -1,16 +1,16 @@
 package com.ltyzzz.core.registry.zookeeper;
 
-import com.ltyzzz.core.event.IRpcEvent;
-import com.ltyzzz.core.event.IRpcListenerLoader;
-import com.ltyzzz.core.event.IRpcUpdateEvent;
-import com.ltyzzz.core.event.URLChangeWrapper;
+import com.alibaba.fastjson.JSON;
+import com.ltyzzz.core.event.*;
 import com.ltyzzz.core.registry.RegistryService;
 import com.ltyzzz.core.registry.URL;
 import com.ltyzzz.core.service.DataService;
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ZookeeperRegister extends AbstractRegister implements RegistryService {
 
@@ -74,8 +74,29 @@ public class ZookeeperRegister extends AbstractRegister implements RegistryServi
 
     @Override
     public void doAfterSubscribe(URL url) {
-        String newServerNodePath = ROOT + "/" + url.getServiceName() + "/provider";
-        watchChildNodeData(newServerNodePath);
+        String servicePath = url.getParameters().get("servicePath");
+        String newServerNodePath = ROOT + "/" + servicePath;
+        this.watchChildNodeData(newServerNodePath);
+        String providerIpStrJson = url.getParameters().get("providerIps");
+        List<String> providerIpList = JSON.parseObject(providerIpStrJson, List.class);
+        for (String providerIp : providerIpList) {
+            this.watchNodeDataChange(ROOT + "/" + servicePath + "/" + providerIp);
+        }
+    }
+
+    public void watchNodeDataChange(String newServerNodePath) {
+        zkClient.watchChildNodeData(newServerNodePath, new Watcher() {
+            @Override
+            public void process(WatchedEvent watchedEvent) {
+                String path = watchedEvent.getPath();
+                String nodeData = zkClient.getNodeData(path);
+                nodeData = nodeData.replace(";", "/");
+                ProviderNodeInfo providerNodeInfo = URL.buildURLFromUrlStr(nodeData);
+                IRpcEvent iRpcEvent = new IRpcNodeChangeEvent(providerNodeInfo);
+                IRpcListenerLoader.sendEvent(iRpcEvent);
+                watchNodeDataChange(newServerNodePath);
+            }
+        });
     }
 
     public void watchChildNodeData(String newServerNodePath) {
@@ -105,6 +126,17 @@ public class ZookeeperRegister extends AbstractRegister implements RegistryServi
     public List<String> getProviderIps(String serviceName) {
         List<String> nodeDataList = this.zkClient.getChildrenData(ROOT + "/" + serviceName + "/provider");
         return nodeDataList;
+    }
+
+    @Override
+    public Map<String, String> getServiceWeightMap(String serviceName) {
+        List<String> nodeDataList = this.zkClient.getChildrenData(ROOT + "/" + serviceName + "/provider");
+        Map<String, String> result = new HashMap<>();
+        for (String ipAndHost : nodeDataList) {
+            String childData = this.zkClient.getNodeData(ROOT + "/" + serviceName + "/provider/" + ipAndHost);
+            result.put(ipAndHost, childData);
+        }
+        return result;
     }
 
     public static void main(String[] args) throws InterruptedException {

@@ -8,6 +8,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+/**
+ * 配置加载器
+ *
+ * @Author linhao
+ * @Date created in 10:39 上午 2021/12/12
+ */
 public class PropertiesLoader {
 
     private static Properties properties;
@@ -17,7 +23,7 @@ public class PropertiesLoader {
     private static String DEFAULT_PROPERTIES_FILE = "/Users/lty/IdeaProjects/ltyzzz-rpc/irpc-framework/irpc-framework-core/src/main/resources/irpc.properties";
 
     public static void loadConfiguration() throws IOException {
-        if(properties!=null){
+        if (properties != null) {
             return;
         }
         properties = new Properties();
@@ -43,7 +49,20 @@ public class PropertiesLoader {
             String value = properties.getProperty(key);
             propertiesMap.put(key, value);
         }
-        return String.valueOf(propertiesMap.get(key));
+        return propertiesMap.get(key) == null ? null : String.valueOf(propertiesMap.get(key));
+    }
+
+    public static String getPropertiesNotBlank(String key) {
+        String val = getPropertiesStr(key);
+        if (val == null || val.equals("")) {
+            throw new IllegalArgumentException(key + " 配置为空异常");
+        }
+        return val;
+    }
+
+    public static String getPropertiesStrDefault(String key, String defaultVal) {
+        String val = getPropertiesStr(key);
+        return val == null || val.equals("") ? defaultVal : val;
     }
 
     /**
