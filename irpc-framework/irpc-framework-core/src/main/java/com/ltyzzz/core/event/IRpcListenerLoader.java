@@ -21,6 +21,8 @@ public class IRpcListenerLoader {
 
     public void init() {
         registerListener(new ServiceUpdateListener());
+        registerListener(new ServiceDestroyListener());
+        registerListener(new ProviderNodeDataChangeListener());
     }
 
     public static Class<?> getInterfaceT(Object o) {
@@ -33,19 +35,35 @@ public class IRpcListenerLoader {
         return null;
     }
 
-    public static void sendEvent(IRpcEvent iRpcEvent) {
-        if(CommonUtils.isEmptyList(iRpcListenerList)){
+    public static void sendSyncEvent(IRpcEvent iRpcEvent) {
+        if (CommonUtils.isEmptyList(iRpcListenerList)) {
             return;
         }
         for (IRpcListener<?> iRpcListener : iRpcListenerList) {
             Class<?> type = getInterfaceT(iRpcListener);
-            if(type.equals(iRpcEvent.getClass())){
+            if (type.equals(iRpcEvent.getClass())) {
+                try {
+                    iRpcListener.callBack(iRpcEvent.getData());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    public static void sendEvent(IRpcEvent iRpcEvent) {
+        if (CommonUtils.isEmptyList(iRpcListenerList)) {
+            return;
+        }
+        for (IRpcListener<?> iRpcListener : iRpcListenerList) {
+            Class<?> type = getInterfaceT(iRpcListener);
+            if (type.equals(iRpcEvent.getClass())) {
                 eventThreadPool.execute(new Runnable() {
                     @Override
                     public void run() {
                         try {
                             iRpcListener.callBack(iRpcEvent.getData());
-                        }catch (Exception e){
+                        } catch (Exception e) {
                             e.printStackTrace();
                         }
                     }
