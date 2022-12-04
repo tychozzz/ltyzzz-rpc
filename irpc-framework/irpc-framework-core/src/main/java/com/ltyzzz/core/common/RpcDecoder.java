@@ -6,7 +6,7 @@ import io.netty.handler.codec.ByteToMessageDecoder;
 
 import java.util.List;
 
-import static com.ltyzzz.core.common.constants.RpcConstants.MAGIC_NUMBER;
+import static com.ltyzzz.core.constants.RpcConstants.MAGIC_NUMBER;
 
 public class RpcDecoder extends ByteToMessageDecoder {
 

@@ -1,18 +1,18 @@
 package com.ltyzzz.core.client;
 
 import com.ltyzzz.core.common.ChannelFutureWrapper;
-import com.ltyzzz.core.common.utils.CommonUtils;
-import com.ltyzzz.core.rooter.IRouter;
-import com.ltyzzz.core.rooter.Selector;
+import com.ltyzzz.core.registry.URL;
+import com.ltyzzz.core.registry.zookeeper.ProviderNodeInfo;
+import com.ltyzzz.core.utils.CommonUtils;
+import com.ltyzzz.core.router.Selector;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelFuture;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Random;
 
-import static com.ltyzzz.core.common.cache.CommonClientCache.*;
+import static com.ltyzzz.core.cache.CommonClientCache.*;
 
 public class ConnectionHandler {
 
@@ -34,12 +34,14 @@ public class ConnectionHandler {
         Integer port = Integer.valueOf(providerAddress[1]);
         ChannelFuture channelFuture = bootstrap.connect(ip, port).sync();
         String providerURLInfo = URL_MAP.get(providerServiceName).get(providerIp);
+        ProviderNodeInfo providerNodeInfo = URL.buildURLFromUrlStr(providerURLInfo);
         System.out.println(providerURLInfo);
         ChannelFutureWrapper wrapper = new ChannelFutureWrapper();
         wrapper.setChannelFuture(channelFuture);
         wrapper.setHost(ip);
         wrapper.setPort(port);
-        wrapper.setWeight(Integer.valueOf(providerURLInfo.substring(providerURLInfo.lastIndexOf(";") + 1)));
+        wrapper.setWeight(providerNodeInfo.getWeight());
+        wrapper.setGroup(providerNodeInfo.getGroup());
         SERVER_ADDRESS.add(providerIp);
         List<ChannelFutureWrapper> channelFutureWrappers = CONNECT_MAP.get(providerServiceName);
         if (CommonUtils.isEmptyList(channelFutureWrappers)) {
@@ -73,12 +75,13 @@ public class ConnectionHandler {
     }
 
     public static ChannelFuture getChannelFuture(String providerServiceName) {
-        List<ChannelFutureWrapper> channelFutureWrappers = CONNECT_MAP.get(providerServiceName);
-        if (CommonUtils.isEmptyList(channelFutureWrappers)) {
+        ChannelFutureWrapper[] channelFutureWrappers = SERVICE_ROUTER_MAP.get(providerServiceName);
+        if (channelFutureWrappers == null || channelFutureWrappers.length == 0) {
             throw new RuntimeException("no provider exist for " + providerServiceName);
         }
         Selector selector = new Selector();
         selector.setProviderServiceName(providerServiceName);
+        selector.setChannelFutureWrappers(channelFutureWrappers);
         ChannelFuture channelFuture = IROUTER.select(selector).getChannelFuture();
         return channelFuture;
     }

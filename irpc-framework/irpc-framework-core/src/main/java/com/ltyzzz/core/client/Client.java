@@ -5,19 +5,22 @@ import com.ltyzzz.core.common.RpcDecoder;
 import com.ltyzzz.core.common.RpcEncoder;
 import com.ltyzzz.core.common.RpcInvocation;
 import com.ltyzzz.core.common.RpcProtocol;
-import com.ltyzzz.core.common.config.ClientConfig;
-import com.ltyzzz.core.common.config.PropertiesBootstrap;
-import com.ltyzzz.core.common.utils.CommonUtils;
+import com.ltyzzz.core.config.ClientConfig;
+import com.ltyzzz.core.config.PropertiesBootstrap;
+import com.ltyzzz.core.serialize.fastjson.FastJsonSerializeFactory;
+import com.ltyzzz.core.serialize.hessian.HessianSerializeFactory;
+import com.ltyzzz.core.serialize.jdk.JdkSerializeFactory;
+import com.ltyzzz.core.serialize.kryo.KryoSerializeFactory;
+import com.ltyzzz.core.utils.CommonUtils;
 import com.ltyzzz.core.event.IRpcListenerLoader;
 import com.ltyzzz.core.proxy.JDKProxyFactory;
 import com.ltyzzz.core.registry.URL;
 import com.ltyzzz.core.registry.zookeeper.AbstractRegister;
 import com.ltyzzz.core.registry.zookeeper.ZookeeperRegister;
-import com.ltyzzz.core.rooter.RandomRouterImpl;
-import com.ltyzzz.core.rooter.RotateRouterImpl;
+import com.ltyzzz.core.router.RandomRouterImpl;
+import com.ltyzzz.core.router.RotateRouterImpl;
 import com.ltyzzz.core.service.DataService;
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.EventLoopGroup;
@@ -30,9 +33,8 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Map;
 
-import static com.ltyzzz.core.common.cache.CommonClientCache.*;
-import static com.ltyzzz.core.common.constants.RpcConstants.RANDOM_ROUTER_TYPE;
-import static com.ltyzzz.core.common.constants.RpcConstants.ROTATE_ROUTER_TYPE;
+import static com.ltyzzz.core.cache.CommonClientCache.*;
+import static com.ltyzzz.core.constants.RpcConstants.*;
 
 public class Client {
 
@@ -122,8 +124,7 @@ public class Client {
             while (true) {
                 try {
                     RpcInvocation data = SEND_QUEUE.take();
-                    String json = JSON.toJSONString(data);
-                    RpcProtocol rpcProtocol = new RpcProtocol(json.getBytes());
+                    RpcProtocol rpcProtocol = new RpcProtocol(CLIENT_SERIALIZE_FACTORY.serialize(data));
                     ChannelFuture channelFuture = ConnectionHandler.getChannelFuture(data.getTargetServiceName());
                     channelFuture.channel().writeAndFlush(rpcProtocol);
                 } catch (InterruptedException e) {
@@ -137,7 +138,10 @@ public class Client {
         Client client = new Client();
         RpcReference rpcReference = client.initClientApplication();
         client.initClientConfig();
-        DataService dataService = rpcReference.getProxy(DataService.class);
+        RpcReferenceWrapper<DataService> rpcReferenceWrapper = new RpcReferenceWrapper<>();
+        rpcReferenceWrapper.setAimClass(DataService.class);
+        rpcReferenceWrapper.setGroup("default");
+        DataService dataService = rpcReference.get(rpcReferenceWrapper);
         client.doSubscribeService(DataService.class);
         ConnectionHandler.setBootstrap(client.getBootstrap());
         client.doConnectServer();
@@ -157,10 +161,32 @@ public class Client {
     private void initClientConfig() {
         //初始化路由策略
         String routerStrategy = clientConfig.getRouterStrategy();
-        if (RANDOM_ROUTER_TYPE.equals(routerStrategy)) {
-            IROUTER = new RandomRouterImpl();
-        } else if (ROTATE_ROUTER_TYPE.equals(routerStrategy)) {
-            IROUTER = new RotateRouterImpl();
+        switch (routerStrategy) {
+            case RANDOM_ROUTER_TYPE:
+                IROUTER = new RandomRouterImpl();
+                break;
+            case ROTATE_ROUTER_TYPE:
+                IROUTER = new RotateRouterImpl();
+                break;
+            default:
+                throw new RuntimeException("no match routerStrategy for" + routerStrategy);
+        }
+        String clientSerialize = clientConfig.getClientSerialize();
+        switch (clientSerialize) {
+            case JDK_SERIALIZE_TYPE:
+                CLIENT_SERIALIZE_FACTORY = new JdkSerializeFactory();
+                break;
+            case FAST_JSON_SERIALIZE_TYPE:
+                CLIENT_SERIALIZE_FACTORY = new FastJsonSerializeFactory();
+                break;
+            case HESSIAN2_SERIALIZE_TYPE:
+                CLIENT_SERIALIZE_FACTORY = new HessianSerializeFactory();
+                break;
+            case KRYO_SERIALIZE_TYPE:
+                CLIENT_SERIALIZE_FACTORY = new KryoSerializeFactory();
+                break;
+            default:
+                throw new RuntimeException("no match serialize type for " + clientSerialize);
         }
     }
 }

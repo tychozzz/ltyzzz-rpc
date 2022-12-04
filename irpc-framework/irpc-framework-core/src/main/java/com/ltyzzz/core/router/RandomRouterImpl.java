@@ -1,4 +1,4 @@
-package com.ltyzzz.core.rooter;
+package com.ltyzzz.core.router;
 
 import com.ltyzzz.core.common.ChannelFutureWrapper;
 import com.ltyzzz.core.registry.URL;
@@ -7,24 +7,31 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import static com.ltyzzz.core.common.cache.CommonClientCache.*;
+import static com.ltyzzz.core.cache.CommonClientCache.*;
 
 public class RandomRouterImpl implements IRouter {
 
     @Override
     public void refreshRouteArr(Selector selector) {
+        //获取服务提供者的数目
         List<ChannelFutureWrapper> channelFutureWrappers = CONNECT_MAP.get(selector.getProviderServiceName());
         ChannelFutureWrapper[] arr = new ChannelFutureWrapper[channelFutureWrappers.size()];
+        //提前生成调用先后顺序的随机数组
         int[] result = createRandomIndex(arr.length);
+        //生成对应服务集群的每台机器的调用顺序
         for (int i = 0; i < result.length; i++) {
             arr[i] = channelFutureWrappers.get(result[i]);
         }
         SERVICE_ROUTER_MAP.put(selector.getProviderServiceName(), arr);
+        URL url = new URL();
+        url.setServiceName(selector.getProviderServiceName());
+        //更新权重
+        IROUTER.updateWeight(url);
     }
 
     @Override
     public ChannelFutureWrapper select(Selector selector) {
-        return CHANNEL_FUTURE_POLLING_REF.getChannelFutureWrapper(selector.getProviderServiceName());
+        return CHANNEL_FUTURE_POLLING_REF.getChannelFutureWrapper(selector.getChannelFutureWrappers());
     }
 
     @Override

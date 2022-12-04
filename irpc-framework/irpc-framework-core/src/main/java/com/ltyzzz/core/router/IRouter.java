@@ -1,4 +1,4 @@
-package com.ltyzzz.core.rooter;
+package com.ltyzzz.core.router;
 
 import com.ltyzzz.core.common.ChannelFutureWrapper;
 import com.ltyzzz.core.registry.URL;

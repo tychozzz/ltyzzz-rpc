@@ -1,4 +1,4 @@
-package com.ltyzzz.core.common.config;
+package com.ltyzzz.core.config;
 
 public class ServerConfig {
 
@@ -7,6 +7,16 @@ public class ServerConfig {
     private String registerAddr;
 
     private String applicationName;
+
+    private String serverSerialize; // 服務端序列化配置
+
+    public String getServerSerialize() {
+        return serverSerialize;
+    }
+
+    public void setServerSerialize(String serverSerialize) {
+        this.serverSerialize = serverSerialize;
+    }
 
     public Integer getServerPort() {
         return serverPort;

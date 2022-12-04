@@ -2,11 +2,15 @@ package com.ltyzzz.core.server;
 
 import com.ltyzzz.core.common.RpcDecoder;
 import com.ltyzzz.core.common.RpcEncoder;
-import com.ltyzzz.core.common.config.PropertiesBootstrap;
-import com.ltyzzz.core.common.config.ServerConfig;
-import com.ltyzzz.core.common.utils.CommonUtils;
+import com.ltyzzz.core.config.PropertiesBootstrap;
+import com.ltyzzz.core.config.ServerConfig;
+import com.ltyzzz.core.serialize.SerializeFactory;
+import com.ltyzzz.core.serialize.fastjson.FastJsonSerializeFactory;
+import com.ltyzzz.core.serialize.hessian.HessianSerializeFactory;
+import com.ltyzzz.core.serialize.jdk.JdkSerializeFactory;
+import com.ltyzzz.core.serialize.kryo.KryoSerializeFactory;
+import com.ltyzzz.core.utils.CommonUtils;
 import com.ltyzzz.core.event.IRpcListenerLoader;
-import com.ltyzzz.core.registry.RegistryService;
 import com.ltyzzz.core.registry.URL;
 import com.ltyzzz.core.registry.zookeeper.ZookeeperRegister;
 import com.ltyzzz.core.service.DataServiceImpl;
@@ -19,7 +23,8 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 
-import static com.ltyzzz.core.common.cache.CommonServerCache.*;
+import static com.ltyzzz.core.cache.CommonServerCache.*;
+import static com.ltyzzz.core.constants.RpcConstants.*;
 
 public class Server {
 
@@ -63,13 +68,32 @@ public class Server {
     public void initServerConfig() {
         ServerConfig serverConfig = PropertiesBootstrap.loadServerConfigFromLocal();
         this.setServerConfig(serverConfig);
+        String serverSerialize = serverConfig.getServerSerialize();
+        switch (serverSerialize) {
+            case JDK_SERIALIZE_TYPE:
+                SERVER_SERIALIZE_FACTORY = new JdkSerializeFactory();
+                break;
+            case FAST_JSON_SERIALIZE_TYPE:
+                SERVER_SERIALIZE_FACTORY = new FastJsonSerializeFactory();
+                break;
+            case HESSIAN2_SERIALIZE_TYPE:
+                SERVER_SERIALIZE_FACTORY = new HessianSerializeFactory();
+                break;
+            case KRYO_SERIALIZE_TYPE:
+                SERVER_SERIALIZE_FACTORY = new KryoSerializeFactory();
+                break;
+            default:
+                throw new RuntimeException("no match serialize type for" + serverSerialize);
+        }
+        System.out.println("serverSerialize is "+serverSerialize);
     }
 
-    public void exportService(Object serviceBean) {
-        Class<?>[] classes = serviceBean.getClass().getInterfaces();
-        if (classes.length == 0) {
+    public void exportService(ServiceWrapper serviceWrapper) {
+        Object serviceBean = serviceWrapper.getServiceObj();
+        if (serviceBean.getClass().getInterfaces().length == 0) {
             throw new RuntimeException("service must had interfaces!");
         }
+        Class[] classes = serviceBean.getClass().getInterfaces();
         if (classes.length > 1) {
             throw new RuntimeException("service must only had one interfaces!");
         }
@@ -83,6 +107,7 @@ public class Server {
         url.setApplicationName(serverConfig.getApplicationName());
         url.addParameter("host", CommonUtils.getIpAddress());
         url.addParameter("port", String.valueOf(serverConfig.getServerPort()));
+        url.addParameter("group", String.valueOf(serviceWrapper.getGroup()));
         PROVIDER_URL_SET.add(url);
     }
 
@@ -120,8 +145,8 @@ public class Server {
         server.initServerConfig();
         iRpcListenerLoader = new IRpcListenerLoader();
         iRpcListenerLoader.init();
-        server.exportService(new DataServiceImpl());
-        server.exportService(new UserServiceImpl());
+        server.exportService(new ServiceWrapper(new DataServiceImpl()));
+        server.exportService(new ServiceWrapper(new UserServiceImpl()));
         ApplicationShutdownHook.registryShutdownHook();
         server.startApplication();
     }

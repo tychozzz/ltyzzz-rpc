@@ -2,8 +2,8 @@ package com.ltyzzz.core.event;
 
 import com.ltyzzz.core.registry.URL;
 
-import static com.ltyzzz.core.common.cache.CommonServerCache.PROVIDER_URL_SET;
-import static com.ltyzzz.core.common.cache.CommonServerCache.REGISTRY_SERVICE;
+import static com.ltyzzz.core.cache.CommonServerCache.PROVIDER_URL_SET;
+import static com.ltyzzz.core.cache.CommonServerCache.REGISTRY_SERVICE;
 
 public class ServiceDestroyListener implements IRpcListener<IRpcDestroyEvent> {
 

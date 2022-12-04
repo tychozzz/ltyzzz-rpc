@@ -1,11 +1,14 @@
-package com.ltyzzz.core.common.cache;
+package com.ltyzzz.core.cache;
 
 
 import com.ltyzzz.core.common.ChannelFuturePollingRef;
 import com.ltyzzz.core.common.ChannelFutureWrapper;
 import com.ltyzzz.core.common.RpcInvocation;
+import com.ltyzzz.core.config.ClientConfig;
+import com.ltyzzz.core.filter.client.ClientFilterChain;
 import com.ltyzzz.core.registry.URL;
-import com.ltyzzz.core.rooter.IRouter;
+import com.ltyzzz.core.router.IRouter;
+import com.ltyzzz.core.serialize.SerializeFactory;
 
 import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -27,4 +30,7 @@ public class CommonClientCache {
     public static Map<String, ChannelFutureWrapper[]> SERVICE_ROUTER_MAP = new ConcurrentHashMap<>();
     public static ChannelFuturePollingRef CHANNEL_FUTURE_POLLING_REF = new ChannelFuturePollingRef();
     public static IRouter IROUTER;
+    public static SerializeFactory CLIENT_SERIALIZE_FACTORY;
+    public static ClientConfig CLIENT_CONFIG;
+    public static ClientFilterChain CLIENT_FILTER_CHAIN ;
 }
