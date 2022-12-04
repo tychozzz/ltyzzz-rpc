@@ -9,7 +9,8 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 
 import java.lang.reflect.Method;
 
-import static com.ltyzzz.core.common.cache.CommonServerCache.PROVIDER_CLASS_MAP;
+import static com.ltyzzz.core.cache.CommonServerCache.PROVIDER_CLASS_MAP;
+import static com.ltyzzz.core.cache.CommonServerCache.SERVER_SERIALIZE_FACTORY;
 
 public class ServerHandler extends ChannelInboundHandlerAdapter {
 
@@ -18,8 +19,7 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
         // 将收到的msg转为RpcProtocol自定义类
         RpcProtocol rpcProtocol = (RpcProtocol) msg;
         // 将msg的content内容进一步转换为RpcInvocation获得具体信息
-        String json = new String(rpcProtocol.getContent(), 0, rpcProtocol.getContentLength());
-        RpcInvocation rpcInvocation = JSON.parseObject(json, RpcInvocation.class);
+        RpcInvocation rpcInvocation = SERVER_SERIALIZE_FACTORY.deserialize(rpcProtocol.getContent(), RpcInvocation.class);
         // 从服务提供者中获取目标服务
         Object aimObject = PROVIDER_CLASS_MAP.get(rpcInvocation.getTargetServiceName());
         // 获取目标服务的全部方法
@@ -39,7 +39,7 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
         // 设置response
         rpcInvocation.setResponse(result);
         // 再次封装为RpcProtocol返回给客户端
-        RpcProtocol respRpcProtocol = new RpcProtocol(JSON.toJSONString(rpcInvocation).getBytes());
+        RpcProtocol respRpcProtocol = new RpcProtocol(SERVER_SERIALIZE_FACTORY.serialize(rpcInvocation));
         ctx.writeAndFlush(respRpcProtocol);
     }
 

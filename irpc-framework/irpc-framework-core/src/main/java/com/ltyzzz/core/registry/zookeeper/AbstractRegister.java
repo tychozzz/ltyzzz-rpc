@@ -6,8 +6,8 @@ import com.ltyzzz.core.registry.URL;
 import java.util.List;
 import java.util.Map;
 
-import static com.ltyzzz.core.common.cache.CommonClientCache.SUBSCRIBE_SERVICE_LIST;
-import static com.ltyzzz.core.common.cache.CommonServerCache.PROVIDER_URL_SET;
+import static com.ltyzzz.core.cache.CommonClientCache.SUBSCRIBE_SERVICE_LIST;
+import static com.ltyzzz.core.cache.CommonServerCache.PROVIDER_URL_SET;
 
 public abstract class AbstractRegister implements RegistryService {
 

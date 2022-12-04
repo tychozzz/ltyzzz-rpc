@@ -3,7 +3,7 @@ package com.ltyzzz.core.common;
 import java.io.Serializable;
 import java.util.Arrays;
 
-import static com.ltyzzz.core.common.constants.RpcConstants.MAGIC_NUMBER;
+import static com.ltyzzz.core.constants.RpcConstants.MAGIC_NUMBER;
 
 public class RpcProtocol implements Serializable {
 

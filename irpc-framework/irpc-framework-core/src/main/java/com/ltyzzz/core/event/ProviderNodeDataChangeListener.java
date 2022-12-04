@@ -6,8 +6,8 @@ import com.ltyzzz.core.registry.zookeeper.ProviderNodeInfo;
 
 import java.util.List;
 
-import static com.ltyzzz.core.common.cache.CommonClientCache.CONNECT_MAP;
-import static com.ltyzzz.core.common.cache.CommonClientCache.IROUTER;
+import static com.ltyzzz.core.cache.CommonClientCache.CONNECT_MAP;
+import static com.ltyzzz.core.cache.CommonClientCache.IROUTER;
 
 public class ProviderNodeDataChangeListener implements IRpcListener<IRpcNodeChangeEvent> {
 

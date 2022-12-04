@@ -1,8 +1,13 @@
 package com.ltyzzz.core.common;
 
+import java.io.Serializable;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
-public class RpcInvocation {
+public class RpcInvocation implements Serializable {
+
+    private static final long serialVersionUID = 8447213193317732435L;
 
     private String targetMethod;
 
@@ -13,6 +18,16 @@ public class RpcInvocation {
     private String uuid;
 
     private Object response;
+
+    private Map<String,Object> attachments = new HashMap<>();
+
+    public Map<String, Object> getAttachments() {
+        return attachments;
+    }
+
+    public void setAttachments(Map<String, Object> attachments) {
+        this.attachments = attachments;
+    }
 
     @Override
     public String toString() {

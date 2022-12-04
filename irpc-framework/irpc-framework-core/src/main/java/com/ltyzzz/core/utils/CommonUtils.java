@@ -1,4 +1,4 @@
-package com.ltyzzz.core.common.utils;
+package com.ltyzzz.core.utils;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;

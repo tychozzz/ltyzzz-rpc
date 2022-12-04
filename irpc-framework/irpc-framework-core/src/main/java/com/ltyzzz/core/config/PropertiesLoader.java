@@ -1,6 +1,6 @@
-package com.ltyzzz.core.common.config;
+package com.ltyzzz.core.config;
 
-import com.ltyzzz.core.common.utils.CommonUtils;
+import com.ltyzzz.core.utils.CommonUtils;
 
 import java.io.FileInputStream;
 import java.io.IOException;

@@ -1,11 +1,11 @@
-package com.ltyzzz.core.rooter;
+package com.ltyzzz.core.router;
 
 import com.ltyzzz.core.common.ChannelFutureWrapper;
 import com.ltyzzz.core.registry.URL;
 
 import java.util.List;
 
-import static com.ltyzzz.core.common.cache.CommonClientCache.*;
+import static com.ltyzzz.core.cache.CommonClientCache.*;
 
 public class RotateRouterImpl implements IRouter {
 
@@ -21,7 +21,7 @@ public class RotateRouterImpl implements IRouter {
 
     @Override
     public ChannelFutureWrapper select(Selector selector) {
-        return CHANNEL_FUTURE_POLLING_REF.getChannelFutureWrapper(selector.getProviderServiceName());
+        return CHANNEL_FUTURE_POLLING_REF.getChannelFutureWrapper(selector.getChannelFutureWrappers());
     }
 
     @Override

@@ -1,6 +1,6 @@
 package com.ltyzzz.core.event;
 
-import com.ltyzzz.core.common.utils.CommonUtils;
+import com.ltyzzz.core.utils.CommonUtils;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;

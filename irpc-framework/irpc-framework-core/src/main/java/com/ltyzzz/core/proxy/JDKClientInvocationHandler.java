@@ -1,23 +1,24 @@
 package com.ltyzzz.core.proxy;
 
+import com.ltyzzz.core.client.RpcReferenceWrapper;
 import com.ltyzzz.core.common.RpcInvocation;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.UUID;
-import java.util.concurrent.TimeoutException;
 
-import static com.ltyzzz.core.common.cache.CommonClientCache.RESP_MAP;
-import static com.ltyzzz.core.common.cache.CommonClientCache.SEND_QUEUE;
+import static com.ltyzzz.core.cache.CommonClientCache.RESP_MAP;
+import static com.ltyzzz.core.cache.CommonClientCache.SEND_QUEUE;
 
 public class JDKClientInvocationHandler implements InvocationHandler {
 
     private final static Object OBJECT = new Object();
 
-    private Class<?> clazz;
+    private RpcReferenceWrapper rpcReferenceWrapper;
 
-    public JDKClientInvocationHandler(Class<?> clazz) {
-        this.clazz = clazz;
+
+    public JDKClientInvocationHandler(RpcReferenceWrapper rpcReferenceWrapper) {
+        this.rpcReferenceWrapper = rpcReferenceWrapper;
     }
 
     /**
@@ -34,7 +35,7 @@ public class JDKClientInvocationHandler implements InvocationHandler {
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         RpcInvocation rpcInvocation = new RpcInvocation();
         rpcInvocation.setTargetMethod(method.getName());
-        rpcInvocation.setTargetServiceName(clazz.getName());
+        rpcInvocation.setTargetServiceName(rpcReferenceWrapper.getAimClass().getName());
         rpcInvocation.setArgs(args);
         rpcInvocation.setUuid(UUID.randomUUID().toString());
         RESP_MAP.put(rpcInvocation.getUuid(), OBJECT);

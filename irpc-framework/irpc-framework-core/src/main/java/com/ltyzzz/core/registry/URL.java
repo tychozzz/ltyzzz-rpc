@@ -21,32 +21,25 @@ public class URL {
     public static String buildProviderUrlStr(URL url) {
         String host = url.getParameters().get("host");
         String port = url.getParameters().get("port");
-        return new String((url.getApplicationName() + ";" +
-                url.getServiceName() + ";" +
-                host + ":" + port + ";" +
-                System.currentTimeMillis() + ";100").getBytes(),
-                StandardCharsets.UTF_8
-        );
+        String group = url.getParameters().get("group");
+        return new String((url.getApplicationName() + ";" + url.getServiceName() + ";" + host + ":" + port + ";" + System.currentTimeMillis() + ";100;" + group).getBytes(), StandardCharsets.UTF_8);
     }
 
     public static String buildConsumerUrlStr(URL url) {
         String host = url.getParameters().get("host");
-        return new String((url.getApplicationName() + ";" +
-                url.getServiceName() + ";" +
-                host + ";" +
-                System.currentTimeMillis()).getBytes(),
-                StandardCharsets.UTF_8
-        );
+        return new String((url.getApplicationName() + ";" + url.getServiceName() + ";" + host + ";" + System.currentTimeMillis()).getBytes(), StandardCharsets.UTF_8);
     }
 
     public static ProviderNodeInfo buildURLFromUrlStr(String providerNodeStr) {
-        String[] items = providerNodeStr.split("/");
-        ProviderNodeInfo info = new ProviderNodeInfo();
-        info.setServiceName(items[1]);
-        info.setAddress(items[2]);
-        info.setRegistryTime(items[3]);
-        info.setWeight(Integer.valueOf(items[4]));
-        return info;
+        String[] items = providerNodeStr.split(";");
+        ProviderNodeInfo providerNodeInfo = new ProviderNodeInfo();
+        providerNodeInfo.setApplicationName(items[0]);
+        providerNodeInfo.setServiceName(items[1]);
+        providerNodeInfo.setAddress(items[2]);
+        providerNodeInfo.setRegistryTime(items[3]);
+        providerNodeInfo.setWeight(Integer.valueOf(items[4]));
+        providerNodeInfo.setGroup(String.valueOf(items[5]));
+        return providerNodeInfo;
     }
 
     public String getApplicationName() {
