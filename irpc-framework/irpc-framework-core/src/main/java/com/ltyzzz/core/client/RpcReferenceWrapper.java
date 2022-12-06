@@ -18,7 +18,11 @@ public class RpcReferenceWrapper<T> {
     }
 
     public boolean isAsync() {
-        return Boolean.valueOf(String.valueOf(attachments.get("async")));
+        Object r = attachments.get("async");
+        if (r == null) {
+            return false;
+        }
+        return Boolean.valueOf(true);
     }
 
     public void setAsync(boolean async) {

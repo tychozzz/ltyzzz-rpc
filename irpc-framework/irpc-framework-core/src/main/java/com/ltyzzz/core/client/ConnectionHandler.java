@@ -1,6 +1,7 @@
 package com.ltyzzz.core.client;
 
 import com.ltyzzz.core.common.ChannelFutureWrapper;
+import com.ltyzzz.core.common.RpcInvocation;
 import com.ltyzzz.core.registry.URL;
 import com.ltyzzz.core.registry.zookeeper.ProviderNodeInfo;
 import com.ltyzzz.core.utils.CommonUtils;
@@ -9,6 +10,7 @@ import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelFuture;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -74,11 +76,13 @@ public class ConnectionHandler {
         }
     }
 
-    public static ChannelFuture getChannelFuture(String providerServiceName) {
+    public static ChannelFuture getChannelFuture(RpcInvocation rpcInvocation) {
+        String providerServiceName = rpcInvocation.getTargetServiceName();
         ChannelFutureWrapper[] channelFutureWrappers = SERVICE_ROUTER_MAP.get(providerServiceName);
         if (channelFutureWrappers == null || channelFutureWrappers.length == 0) {
             throw new RuntimeException("no provider exist for " + providerServiceName);
         }
+        CLIENT_FILTER_CHAIN.doFilter(Arrays.asList(channelFutureWrappers), rpcInvocation);
         Selector selector = new Selector();
         selector.setProviderServiceName(providerServiceName);
         selector.setChannelFutureWrappers(channelFutureWrappers);

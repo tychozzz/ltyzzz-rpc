@@ -7,8 +7,10 @@ import com.ltyzzz.core.common.RpcInvocation;
 import com.ltyzzz.core.config.ClientConfig;
 import com.ltyzzz.core.filter.client.ClientFilterChain;
 import com.ltyzzz.core.registry.URL;
+import com.ltyzzz.core.registry.zookeeper.AbstractRegister;
 import com.ltyzzz.core.router.IRouter;
 import com.ltyzzz.core.serialize.SerializeFactory;
+import com.ltyzzz.core.spi.ExtensionLoader;
 
 import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -32,5 +34,7 @@ public class CommonClientCache {
     public static IRouter IROUTER;
     public static SerializeFactory CLIENT_SERIALIZE_FACTORY;
     public static ClientConfig CLIENT_CONFIG;
-    public static ClientFilterChain CLIENT_FILTER_CHAIN ;
+    public static ClientFilterChain CLIENT_FILTER_CHAIN;
+    public static AbstractRegister ABSTRACT_REGISTER;
+    public static ExtensionLoader EXTENSION_LOADER = new ExtensionLoader();
 }

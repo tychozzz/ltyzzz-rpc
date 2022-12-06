@@ -4,6 +4,7 @@ import com.ltyzzz.core.utils.CommonUtils;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -20,15 +21,14 @@ public class PropertiesLoader {
 
     private static Map<String, String> propertiesMap = new HashMap<>();
 
-    private static String DEFAULT_PROPERTIES_FILE = "/Users/lty/IdeaProjects/ltyzzz-rpc/irpc-framework/irpc-framework-core/src/main/resources/irpc.properties";
+    private static String DEFAULT_PROPERTIES_FILE = "irpc.properties";
 
     public static void loadConfiguration() throws IOException {
         if (properties != null) {
             return;
         }
         properties = new Properties();
-        FileInputStream in = null;
-        in = new FileInputStream(DEFAULT_PROPERTIES_FILE);
+        InputStream in = PropertiesLoader.class.getClassLoader().getResourceAsStream(DEFAULT_PROPERTIES_FILE);
         properties.load(in);
     }
 
@@ -80,6 +80,24 @@ public class PropertiesLoader {
         }
         if (!propertiesMap.containsKey(key)) {
             String value = properties.getProperty(key);
+            propertiesMap.put(key, value);
+        }
+        return Integer.valueOf(propertiesMap.get(key));
+    }
+
+    public static Integer getPropertiesIntegerDefault(String key, Integer defaultVal) {
+        if (properties == null) {
+            return defaultVal;
+        }
+        if (CommonUtils.isEmpty(key)) {
+            return defaultVal;
+        }
+        String value = properties.getProperty(key);
+        if(value==null){
+            propertiesMap.put(key, String.valueOf(defaultVal));
+            return defaultVal;
+        }
+        if (!propertiesMap.containsKey(key)) {
             propertiesMap.put(key, value);
         }
         return Integer.valueOf(propertiesMap.get(key));

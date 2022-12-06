@@ -5,6 +5,7 @@ import com.ltyzzz.core.event.*;
 import com.ltyzzz.core.registry.RegistryService;
 import com.ltyzzz.core.registry.URL;
 import com.ltyzzz.core.service.DataService;
+import com.ltyzzz.core.utils.CommonUtils;
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
 
@@ -12,11 +13,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.ltyzzz.core.cache.CommonClientCache.CLIENT_CONFIG;
+import static com.ltyzzz.core.cache.CommonServerCache.IS_STARTED;
+import static com.ltyzzz.core.cache.CommonServerCache.SERVER_CONFIG;
+
 public class ZookeeperRegister extends AbstractRegister implements RegistryService {
 
     private AbstractZookeeperClient zkClient;
 
     private String ROOT = "/irpc";
+
+    public ZookeeperRegister() {
+        String registryAddr = CLIENT_CONFIG != null ? CLIENT_CONFIG.getRegisterAddr() : SERVER_CONFIG.getRegisterAddr();
+        this.zkClient = new CuratorZookeeperClient(registryAddr);
+    }
 
     public ZookeeperRegister(String address) {
         this.zkClient = new CuratorZookeeperClient(address);
@@ -49,6 +59,9 @@ public class ZookeeperRegister extends AbstractRegister implements RegistryServi
 
     @Override
     public void unRegister(URL url) {
+        if (!IS_STARTED) {
+            return;
+        }
         zkClient.deleteNode(getProviderPath(url));
         super.unRegister(url);
     }
@@ -103,14 +116,28 @@ public class ZookeeperRegister extends AbstractRegister implements RegistryServi
             @Override
             public void process(WatchedEvent watchedEvent) {
                 System.out.println(watchedEvent);
-                String path = watchedEvent.getPath();
-                List<String> childrenData = zkClient.getChildrenData(path);
+                String servicePath = watchedEvent.getPath();
+                List<String> childrenDataList = zkClient.getChildrenData(servicePath);
+                if (CommonUtils.isEmptyList(childrenDataList)) {
+                    watchChildNodeData(servicePath);
+                    return;
+                }
                 URLChangeWrapper urlChangeWrapper = new URLChangeWrapper();
-                urlChangeWrapper.setProviderUrl(childrenData);
-                urlChangeWrapper.setServiceName(path.split("/")[2]);
+                Map<String, String> nodeDetailInfoMap = new HashMap<>();
+                for (String providerAddress : childrenDataList) {
+                    String nodeDetailInfo = zkClient.getNodeData(servicePath + "/" + providerAddress);
+                    nodeDetailInfoMap.put(providerAddress, nodeDetailInfo);
+                }
+                urlChangeWrapper.setNodeDataUrl(nodeDetailInfoMap);
+                urlChangeWrapper.setProviderUrl(childrenDataList);
+                urlChangeWrapper.setProviderUrl(childrenDataList);
+                urlChangeWrapper.setServiceName(servicePath.split("/")[2]);
                 IRpcEvent iRpcEvent = new IRpcUpdateEvent(urlChangeWrapper);
                 IRpcListenerLoader.sendEvent(iRpcEvent);
-                watchChildNodeData(path);
+                watchChildNodeData(servicePath);
+                for (String providerAddress : childrenDataList) {
+                    watchNodeDataChange(servicePath + "/" + providerAddress);
+                }
             }
         });
     }

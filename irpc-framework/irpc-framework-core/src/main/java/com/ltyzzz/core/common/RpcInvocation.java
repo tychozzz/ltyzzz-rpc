@@ -21,14 +21,6 @@ public class RpcInvocation implements Serializable {
 
     private Map<String,Object> attachments = new HashMap<>();
 
-    public Map<String, Object> getAttachments() {
-        return attachments;
-    }
-
-    public void setAttachments(Map<String, Object> attachments) {
-        this.attachments = attachments;
-    }
-
     @Override
     public String toString() {
         return "RpcInvocation{" +
@@ -38,6 +30,14 @@ public class RpcInvocation implements Serializable {
                 ", uuid='" + uuid + '\'' +
                 ", response=" + response +
                 '}';
+    }
+
+    public Map<String, Object> getAttachments() {
+        return attachments;
+    }
+
+    public void setAttachments(Map<String, Object> attachments) {
+        this.attachments = attachments;
     }
 
     public String getTargetMethod() {

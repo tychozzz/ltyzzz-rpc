@@ -12,6 +12,26 @@ public class ClientConfig {
 
     private String clientSerialize; // 客戶端序列化策略
 
+    private String registerType; // 注册中心类型
+
+    private Integer timeOut; // 超时时间
+
+    public Integer getTimeOut() {
+        return timeOut;
+    }
+
+    public void setTimeOut(Integer timeOut) {
+        this.timeOut = timeOut;
+    }
+
+    public String getRegisterType() {
+        return registerType;
+    }
+
+    public void setRegisterType(String registerType) {
+        this.registerType = registerType;
+    }
+
     public String getRouterStrategy() {
         return routerStrategy;
     }

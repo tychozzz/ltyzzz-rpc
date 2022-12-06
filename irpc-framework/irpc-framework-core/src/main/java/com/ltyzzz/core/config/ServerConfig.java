@@ -6,9 +6,39 @@ public class ServerConfig {
 
     private String registerAddr;
 
+    private String registerType;
+
     private String applicationName;
 
     private String serverSerialize; // 服務端序列化配置
+
+    private Integer serverBizThreadNums;
+
+    private Integer serverQueueSize;
+
+    public Integer getServerBizThreadNums() {
+        return serverBizThreadNums;
+    }
+
+    public void setServerBizThreadNums(Integer serverBizThreadNums) {
+        this.serverBizThreadNums = serverBizThreadNums;
+    }
+
+    public Integer getServerQueueSize() {
+        return serverQueueSize;
+    }
+
+    public void setServerQueueSize(Integer serverQueueSize) {
+        this.serverQueueSize = serverQueueSize;
+    }
+
+    public String getRegisterType() {
+        return registerType;
+    }
+
+    public void setRegisterType(String registerType) {
+        this.registerType = registerType;
+    }
 
     public String getServerSerialize() {
         return serverSerialize;

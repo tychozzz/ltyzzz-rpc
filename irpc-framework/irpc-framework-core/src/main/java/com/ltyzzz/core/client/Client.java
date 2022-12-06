@@ -7,6 +7,13 @@ import com.ltyzzz.core.common.RpcInvocation;
 import com.ltyzzz.core.common.RpcProtocol;
 import com.ltyzzz.core.config.ClientConfig;
 import com.ltyzzz.core.config.PropertiesBootstrap;
+import com.ltyzzz.core.filter.IClientFilter;
+import com.ltyzzz.core.filter.IFilter;
+import com.ltyzzz.core.filter.client.ClientFilterChain;
+import com.ltyzzz.core.proxy.ProxyFactory;
+import com.ltyzzz.core.registry.RegistryService;
+import com.ltyzzz.core.router.IRouter;
+import com.ltyzzz.core.serialize.SerializeFactory;
 import com.ltyzzz.core.serialize.fastjson.FastJsonSerializeFactory;
 import com.ltyzzz.core.serialize.hessian.HessianSerializeFactory;
 import com.ltyzzz.core.serialize.jdk.JdkSerializeFactory;
@@ -30,11 +37,14 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import static com.ltyzzz.core.cache.CommonClientCache.*;
 import static com.ltyzzz.core.constants.RpcConstants.*;
+import static com.ltyzzz.core.spi.ExtensionLoader.EXTENSION_LOADER_CLASS_CACHE;
 
 public class Client {
 
@@ -43,8 +53,6 @@ public class Client {
     public static EventLoopGroup clientGroup = new NioEventLoopGroup();
 
     private ClientConfig clientConfig;
-
-    private AbstractRegister abstractRegister;
 
     private IRpcListenerLoader iRpcListenerLoader;
 
@@ -62,7 +70,7 @@ public class Client {
         this.clientConfig = clientConfig;
     }
 
-    public RpcReference initClientApplication() {
+    public RpcReference initClientApplication() throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException {
         EventLoopGroup clientGroup = new NioEventLoopGroup();
         bootstrap.group(clientGroup);
         bootstrap.channel(NioSocketChannel.class);
@@ -77,26 +85,39 @@ public class Client {
         iRpcListenerLoader = new IRpcListenerLoader();
         iRpcListenerLoader.init();
         this.clientConfig = PropertiesBootstrap.loadClientConfigFromLocal();
-        RpcReference rpcReference = new RpcReference(new JDKProxyFactory());
-        return rpcReference;
+        CLIENT_CONFIG = this.clientConfig;
+        this.initClientConfig();
+        EXTENSION_LOADER.loadExtension(ProxyFactory.class);
+        String proxyType = clientConfig.getProxyType();
+        LinkedHashMap<String, Class> classMap = EXTENSION_LOADER_CLASS_CACHE.get(ProxyFactory.class.getName());
+        Class proxyTypeClass = classMap.get(proxyType);
+        ProxyFactory proxyFactory = (ProxyFactory) proxyTypeClass.newInstance();
+        return new RpcReference(proxyFactory);
     }
 
     public void doSubscribeService(Class serviceBean) {
-        if (abstractRegister == null) {
-            abstractRegister = new ZookeeperRegister(clientConfig.getRegisterAddr());
+        if (ABSTRACT_REGISTER == null) {
+            try {
+                EXTENSION_LOADER.loadExtension(RegistryService.class);
+                LinkedHashMap<String, Class> registerMap = EXTENSION_LOADER_CLASS_CACHE.get(RegistryService.class.getName());
+                Class registerClass = registerMap.get(clientConfig.getRegisterType());
+                ABSTRACT_REGISTER = (AbstractRegister) registerClass.newInstance();
+            } catch (Exception e) {
+                throw new RuntimeException("registryServiceType unKnow,error is ", e);
+            }
         }
         URL url = new URL();
         url.setApplicationName(clientConfig.getApplicationName());
         url.setServiceName(serviceBean.getName());
         url.addParameter("host", CommonUtils.getIpAddress());
-        Map<String, String> result = abstractRegister.getServiceWeightMap(serviceBean.getName());
+        Map<String, String> result = ABSTRACT_REGISTER.getServiceWeightMap(serviceBean.getName());
         URL_MAP.put(serviceBean.getName(), result);
-        abstractRegister.subscribe(url);
+        ABSTRACT_REGISTER.subscribe(url);
     }
 
     public void doConnectServer() {
         for (URL providerURL : SUBSCRIBE_SERVICE_LIST) {
-            List<String> providerIps = abstractRegister.getProviderIps(providerURL.getServiceName());
+            List<String> providerIps = ABSTRACT_REGISTER.getProviderIps(providerURL.getServiceName());
             for (String providerIp : providerIps) {
                 try {
                     ConnectionHandler.connect(providerURL.getServiceName(), providerIp);
@@ -108,7 +129,7 @@ public class Client {
             url.addParameter("servicePath", providerURL.getServiceName() + "/provider");
             url.addParameter("providerIps", JSON.toJSONString(providerIps));
             // 开启监听
-            abstractRegister.doAfterSubscribe(url);
+            ABSTRACT_REGISTER.doAfterSubscribe(url);
         }
     }
 
@@ -123,10 +144,12 @@ public class Client {
         public void run() {
             while (true) {
                 try {
-                    RpcInvocation data = SEND_QUEUE.take();
-                    RpcProtocol rpcProtocol = new RpcProtocol(CLIENT_SERIALIZE_FACTORY.serialize(data));
-                    ChannelFuture channelFuture = ConnectionHandler.getChannelFuture(data.getTargetServiceName());
-                    channelFuture.channel().writeAndFlush(rpcProtocol);
+                    RpcInvocation rpcInvocation = SEND_QUEUE.take();
+                    ChannelFuture channelFuture = ConnectionHandler.getChannelFuture(rpcInvocation);
+                    if (channelFuture != null) {
+                        RpcProtocol rpcProtocol = new RpcProtocol(CLIENT_SERIALIZE_FACTORY.serialize(rpcInvocation));
+                        channelFuture.channel().writeAndFlush(rpcProtocol);
+                    }
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -158,35 +181,36 @@ public class Client {
         }
     }
 
-    private void initClientConfig() {
-        //初始化路由策略
+    private void initClientConfig() throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException {
+        //初始化路由策略 多选一
+        EXTENSION_LOADER.loadExtension(IRouter.class);
         String routerStrategy = clientConfig.getRouterStrategy();
-        switch (routerStrategy) {
-            case RANDOM_ROUTER_TYPE:
-                IROUTER = new RandomRouterImpl();
-                break;
-            case ROTATE_ROUTER_TYPE:
-                IROUTER = new RotateRouterImpl();
-                break;
-            default:
-                throw new RuntimeException("no match routerStrategy for" + routerStrategy);
+        LinkedHashMap<String, Class> iRouterMap = EXTENSION_LOADER_CLASS_CACHE.get(IRouter.class.getName());
+        Class iRouterClass = iRouterMap.get(routerStrategy);
+        if (iRouterClass == null) {
+            throw new RuntimeException("no match routerStrategy for " + routerStrategy);
         }
+        IROUTER = (IRouter) iRouterClass.newInstance();
+        // 初始化序列化框架 多选一
+        EXTENSION_LOADER.loadExtension(SerializeFactory.class);
         String clientSerialize = clientConfig.getClientSerialize();
-        switch (clientSerialize) {
-            case JDK_SERIALIZE_TYPE:
-                CLIENT_SERIALIZE_FACTORY = new JdkSerializeFactory();
-                break;
-            case FAST_JSON_SERIALIZE_TYPE:
-                CLIENT_SERIALIZE_FACTORY = new FastJsonSerializeFactory();
-                break;
-            case HESSIAN2_SERIALIZE_TYPE:
-                CLIENT_SERIALIZE_FACTORY = new HessianSerializeFactory();
-                break;
-            case KRYO_SERIALIZE_TYPE:
-                CLIENT_SERIALIZE_FACTORY = new KryoSerializeFactory();
-                break;
-            default:
-                throw new RuntimeException("no match serialize type for " + clientSerialize);
+        LinkedHashMap<String, Class> serializeMap = EXTENSION_LOADER_CLASS_CACHE.get(SerializeFactory.class.getName());
+        Class serializeFactoryClass = serializeMap.get(clientSerialize);
+        if (serializeFactoryClass == null) {
+            throw new RuntimeException("no match serialize type for " + clientSerialize);
         }
+        CLIENT_SERIALIZE_FACTORY = (SerializeFactory) serializeFactoryClass.newInstance();
+        // 初始化过滤链 全部添加
+        EXTENSION_LOADER.loadExtension(IClientFilter.class);
+        ClientFilterChain clientFilterChain = new ClientFilterChain();
+        LinkedHashMap<String, Class> iClientMap = EXTENSION_LOADER_CLASS_CACHE.get(IClientFilter.class);
+        for (String implClassName : iClientMap.keySet()) {
+            Class iClientFilterClass = iClientMap.get(implClassName);
+            if (iClientFilterClass == null) {
+                throw new RuntimeException("no match iClientFilter for " + iClientFilterClass);
+            }
+            clientFilterChain.addClientFilter((IClientFilter) iClientFilterClass.newInstance());
+        }
+        CLIENT_FILTER_CHAIN = clientFilterChain;
     }
 }

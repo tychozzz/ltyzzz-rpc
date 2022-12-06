@@ -5,6 +5,7 @@ import com.ltyzzz.core.common.RpcInvocation;
 import com.ltyzzz.core.filter.IClientFilter;
 import com.ltyzzz.core.utils.CommonUtils;
 
+import java.util.Iterator;
 import java.util.List;
 
 public class GroupFilterImpl implements IClientFilter {
@@ -12,9 +13,11 @@ public class GroupFilterImpl implements IClientFilter {
     @Override
     public void doFilter(List<ChannelFutureWrapper> src, RpcInvocation rpcInvocation) {
         String group = String.valueOf(rpcInvocation.getAttachments().get("group"));
-        for (ChannelFutureWrapper wrapper : src) {
-            if (!wrapper.getGroup().equals(group)) {
-                src.remove(wrapper);
+        Iterator<ChannelFutureWrapper> channelFutureWrapperIterator = src.iterator();
+        while (channelFutureWrapperIterator.hasNext()){
+            ChannelFutureWrapper channelFutureWrapper = channelFutureWrapperIterator.next();
+            if (!channelFutureWrapper.getGroup().equals(group)) {
+                channelFutureWrapperIterator.remove();
             }
         }
         if (CommonUtils.isEmptyList(src)) {

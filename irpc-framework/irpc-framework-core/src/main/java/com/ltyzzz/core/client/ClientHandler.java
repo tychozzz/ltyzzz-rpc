@@ -1,6 +1,5 @@
 package com.ltyzzz.core.client;
 
-import com.alibaba.fastjson.JSON;
 import com.ltyzzz.core.common.RpcInvocation;
 import com.ltyzzz.core.common.RpcProtocol;
 import io.netty.channel.Channel;
@@ -15,10 +14,10 @@ public class ClientHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        // 此时的msg已经被解码，直接转为RpcProtocol对象即可
+        // 此时msg已经被解码，直接转为RpcProtocol对象即可
         RpcProtocol rpcProtocol = (RpcProtocol) msg;
         byte[] content = rpcProtocol.getContent();
-        // 将具体地content转为RpcInvocation
+        // 将RpcProtocol中的内容content反序列化
         RpcInvocation rpcInvocation = CLIENT_SERIALIZE_FACTORY.deserialize(content, RpcInvocation.class);
         if (!RESP_MAP.containsKey(rpcInvocation.getUuid())) {
             throw new IllegalArgumentException("server response is error!");

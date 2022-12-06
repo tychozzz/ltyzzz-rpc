@@ -1,6 +1,7 @@
 package com.ltyzzz.core.cache;
 
 import com.ltyzzz.core.config.ServerConfig;
+import com.ltyzzz.core.dispatcher.ServerChannelDispatcher;
 import com.ltyzzz.core.filter.server.ServerFilterChain;
 import com.ltyzzz.core.registry.RegistryService;
 import com.ltyzzz.core.registry.URL;
@@ -21,4 +22,6 @@ public class CommonServerCache {
     public static ServerConfig SERVER_CONFIG;
     public static ServerFilterChain SERVER_FILTER_CHAIN;
     public static final Map<String, ServiceWrapper> PROVIDER_SERVICE_WRAPPER_MAP = new ConcurrentHashMap<>();
+    public static Boolean IS_STARTED = false;
+    public static ServerChannelDispatcher SERVER_CHANNEL_DISPATCHER = new ServerChannelDispatcher();
 }
