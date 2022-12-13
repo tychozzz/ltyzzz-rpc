@@ -1,0 +1,2 @@
+rotate=com.ltyzzz.core.router.RotateRouterImpl
+random=com.ltyzzz.core.router.RandomRouterImpl

@@ -1,0 +1,4 @@
+kryo=com.ltyzzz.core.serialize.kryo.KryoSerializeFactory
+jdk=com.ltyzzz.core.serialize.jdk.JdkSerializeFactory
+hessian=com.ltyzzz.core.serialize.hessian.HessianSerializeFactory
+fastJson=com.ltyzzz.core.serialize.fastjson.FastJsonSerializeFactory
