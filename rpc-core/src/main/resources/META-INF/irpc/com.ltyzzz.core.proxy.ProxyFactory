@@ -1,0 +1,2 @@
+jdk=com.ltyzzz.core.proxy.jdk.JDKProxyFactory
+javassist=com.ltyzzz.core.proxy.javassist.JavassistProxyFactory

@@ -30,9 +30,10 @@
     </properties>
     <modules>
         <module>simple-rpc</module>
-        <module>my-rpc</module>
-        <module>common</module>
-        <module>irpc-framework</module>
+        <module>rpc-core</module>
+        <module>rpc-consumer</module>
+        <module>rpc-spring-starter</module>
+        <module>rpc-provider</module>
     </modules>
     <dependencies>
         <!-- lombok -->

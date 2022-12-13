@@ -1,0 +1,4 @@
+serverLogFilterImpl=com.ltyzzz.core.filter.server.ServerLogFilterImpl
+serverTokenFilterImpl=com.ltyzzz.core.filter.server.ServerTokenFilterImpl
+serverServiceBeforeLimitFilterImpl=com.ltyzzz.core.filter.server.ServerServiceBeforeLimitFilterImpl
+serverServiceAfterLimitFilterImpl=com.ltyzzz.core.filter.server.ServerServiceAfterLimitFilterImpl
