@@ -1,4 +1,4 @@
-package com.ltyzzz.core.service;
+package com.ltyzzz.interfaces.common;
 
 import java.util.List;
 

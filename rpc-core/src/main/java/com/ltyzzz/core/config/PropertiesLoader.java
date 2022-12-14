@@ -8,12 +8,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-/**
- * 配置加载器
- *
- * @Author linhao
- * @Date created in 10:39 上午 2021/12/12
- */
 public class PropertiesLoader {
 
     private static Properties properties;

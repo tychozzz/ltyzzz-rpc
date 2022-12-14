@@ -17,7 +17,6 @@ import com.ltyzzz.core.utils.CommonUtils;
 import com.ltyzzz.core.event.IRpcListenerLoader;
 import com.ltyzzz.core.registry.URL;
 import com.ltyzzz.core.registry.zookeeper.AbstractRegister;
-import com.ltyzzz.core.service.DataService;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;

@@ -4,7 +4,6 @@ import com.alibaba.fastjson.JSON;
 import com.ltyzzz.core.event.*;
 import com.ltyzzz.core.registry.RegistryService;
 import com.ltyzzz.core.registry.URL;
-import com.ltyzzz.core.service.DataService;
 import com.ltyzzz.core.utils.CommonUtils;
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
@@ -165,10 +164,10 @@ public class ZookeeperRegister extends AbstractRegister implements RegistryServi
         return result;
     }
 
-    public static void main(String[] args) throws InterruptedException {
-        ZookeeperRegister zookeeperRegister = new ZookeeperRegister("localhost:2181");
-        List<String> urls = zookeeperRegister.getProviderIps(DataService.class.getName());
-        System.out.println(urls);
-        Thread.sleep(2000000);
-    }
+    //public static void main(String[] args) throws InterruptedException {
+    //    ZookeeperRegister zookeeperRegister = new ZookeeperRegister("localhost:2181");
+    //    List<String> urls = zookeeperRegister.getProviderIps(DataService.class.getName());
+    //    System.out.println(urls);
+    //    Thread.sleep(2000000);
+    //}
 }

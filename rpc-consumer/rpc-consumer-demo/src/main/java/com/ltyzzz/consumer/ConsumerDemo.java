@@ -4,7 +4,7 @@ import com.ltyzzz.core.client.Client;
 import com.ltyzzz.core.client.ConnectionHandler;
 import com.ltyzzz.core.client.RpcReference;
 import com.ltyzzz.core.client.RpcReferenceWrapper;
-import com.ltyzzz.core.service.DataService;
+import com.ltyzzz.interfaces.common.DataService;
 
 import java.util.Scanner;
 
