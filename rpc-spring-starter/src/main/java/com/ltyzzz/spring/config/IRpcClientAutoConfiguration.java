@@ -17,11 +17,8 @@ import java.lang.reflect.Field;
 public class IRpcClientAutoConfiguration implements BeanPostProcessor, ApplicationListener<ApplicationReadyEvent> {
 
     private static RpcReference rpcReference = null;
-
     private static Client client = null;
-
     private volatile boolean needInitClient = false;
-
     private volatile boolean hasInitClientConfig = false;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(IRpcClientAutoConfiguration.class);
@@ -52,6 +49,7 @@ public class IRpcClientAutoConfiguration implements BeanPostProcessor, Applicati
                     rpcReferenceWrapper.setServiceToken(iRpcReference.serviceToken());
                     rpcReferenceWrapper.setUrl(iRpcReference.url());
                     rpcReferenceWrapper.setTimeOut(iRpcReference.timeOut());
+                    //失败重试次数
                     rpcReferenceWrapper.setRetry(iRpcReference.retry());
                     rpcReferenceWrapper.setAsync(iRpcReference.async());
                     refObj = rpcReference.get(rpcReferenceWrapper);
@@ -66,6 +64,7 @@ public class IRpcClientAutoConfiguration implements BeanPostProcessor, Applicati
         }
         return bean;
     }
+
 
     @Override
     public void onApplicationEvent(ApplicationReadyEvent applicationReadyEvent) {

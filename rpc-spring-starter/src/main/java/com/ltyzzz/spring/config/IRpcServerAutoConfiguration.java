@@ -22,23 +22,25 @@ public class IRpcServerAutoConfiguration implements InitializingBean, Applicatio
 
     @Override
     public void afterPropertiesSet() throws Exception {
+        Server server = null;
         Map<String, Object> beanMap = applicationContext.getBeansWithAnnotation(IRpcService.class);
         if (beanMap.size() == 0) {
+            //说明当前应用内部不需要对外暴露服务
             return;
         }
         printBanner();
         long begin = System.currentTimeMillis();
-        Server server = new Server();
+        server = new Server();
         server.initServerConfig();
         IRpcListenerLoader iRpcListenerLoader = new IRpcListenerLoader();
         iRpcListenerLoader.init();
         for (String beanName : beanMap.keySet()) {
             Object bean = beanMap.get(beanName);
             IRpcService iRpcService = bean.getClass().getAnnotation(IRpcService.class);
-            ServiceWrapper dataServiceWrapper = new ServiceWrapper(bean, iRpcService.group());
-            dataServiceWrapper.setServiceToken(iRpcService.serviceToken());
-            dataServiceWrapper.setLimit(iRpcService.limit());
-            server.exportService(dataServiceWrapper);
+            ServiceWrapper dataServiceServiceWrapper = new ServiceWrapper(bean, iRpcService.group());
+            dataServiceServiceWrapper.setServiceToken(iRpcService.serviceToken());
+            dataServiceServiceWrapper.setLimit(iRpcService.limit());
+            server.exportService(dataServiceServiceWrapper);
             LOGGER.info(">>>>>>>>>>>>>>> [irpc] {} export success! >>>>>>>>>>>>>>> ",beanName);
         }
         long end = System.currentTimeMillis();
