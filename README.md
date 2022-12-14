@@ -6,40 +6,40 @@
 
 ```
 ├── rpc-consumer
-│   ├── rpc-consumer-demo		-> 未接入spring：consumer测试类
-│   └── rpc-consumer-spring		-> 接入spring：consumer本地服务接口
-├── rpc-core					-> rpc核心实现逻辑模块
-├── rpc-interface				-> 远程服务接口
+│   ├── rpc-consumer-demo          -> 未接入spring：consumer测试类
+│   └── rpc-consumer-spring        -> 接入spring：consumer本地服务接口
+├── rpc-core                       -> rpc核心实现逻辑模块
+├── rpc-interface                  -> 远程服务接口
 ├── rpc-provider
-│   ├── rpc-provider-demo		-> 未接入spring：provider测试类
-│   ├── rpc-provider-goods	    -> 接入spring：provider远程服务
-│   ├── rpc-provider-pay        -> 接入spring：provider远程服务
-│   └── rpc-provider-user		-> 接入spring：provider远程服务
-├── rpc-spring-starter			-> spring-starter接入类
-└── simple-rpc					-> 简易rpc
+│   ├── rpc-provider-demo          -> 未接入spring：provider测试类
+│   ├── rpc-provider-goods         -> 接入spring：provider远程服务
+│   ├── rpc-provider-pay           -> 接入spring：provider远程服务
+│   └── rpc-provider-user          -> 接入spring：provider远程服务
+├── rpc-spring-starter             -> spring-starter接入类
+└── simple-rpc                     -> 简易rpc
 ```
 
 ## 核心模块树
 
 ```
-├── annotations                 -> 项目注解包
-├── cache						-> 项目全局缓存
-├── client						-> 客户端相关类（请求处理、启动加载）
-├── common						-> 通用模块
-├── config						-> 项目配置（服务端、客户端属性配置）
-├── constants					-> 项目常量
-├── dispatcher					-> 服务端请求解耦
-├── event						-> 事件监听机制
-├── exception					-> 全局异常
-├── filter						-> 责任链模式过滤请求
-├── proxy						-> 动态代理
-├── registry					-> 注册中心
-├── router						-> 路由选择负载均衡
-├── serialize					-> 序列化与反序列化
-├── server						-> 服务端相关类（请求处理、启动加载）
-├── service						-> 测试服务接口
-├── spi							-> SPI自定义加载类
-└── utils						-> 项目工具包
+├── annotations                    -> 项目注解包
+├── cache                          -> 项目全局缓存
+├── client                         -> 客户端相关类（请求处理、启动加载）
+├── common                         -> 通用模块
+├── config                         -> 项目配置（服务端、客户端属性配置）
+├── constants                      -> 项目常量
+├── dispatcher                     -> 服务端请求解耦
+├── event                          -> 事件监听机制
+├── exception                      -> 全局异常
+├── filter                         -> 责任链模式过滤请求
+├── proxy                          -> 动态代理
+├── registry                       -> 注册中心
+├── router                         -> 路由选择负载均衡
+├── serialize                      -> 序列化与反序列化
+├── server                         -> 服务端相关类（请求处理、启动加载）
+├── service                        -> 测试服务接口
+├── spi                            -> SPI自定义加载类
+└── utils                          -> 项目工具包
 ```
 
 # RPC项目测试
@@ -504,17 +504,17 @@ public ChannelFutureWrapper getChannelFutureWrapper(String serviceName) {
 
 ```
 ├── IFilter.java
-├── IClientFilter.java              -> 继承IFilter接口
+├── IClientFilter.java                  -> 继承IFilter接口
 ├── IServerFilter.java				-> 继承IFilter接口
 ├── client
 │   ├── ClientFilterChain.java		-> 客户端过滤链
-│   ├── ClientLogFilterImpl.java	-> 日志过滤器实现类
-│   ├── DirectInvokeFilterImpl.java -> IP过滤器实现类
-│   └── GroupFilterImpl.java		-> 分组过滤器实现类
+│   ├── ClientLogFilterImpl.java        -> 日志过滤器实现类
+│   ├── DirectInvokeFilterImpl.java     -> IP过滤器实现类
+│   └── GroupFilterImpl.java            -> 分组过滤器实现类
 └── server
     ├── ServerFilterChain.java		-> 服务器过滤链
-    ├── ServerLogFilterImpl.java	-> 日志过滤器实现类
-    └── ServerTokenFilterImpl.java  -> Token安全校验过滤器实现类
+    ├── ServerLogFilterImpl.java        -> 日志过滤器实现类
+    └── ServerTokenFilterImpl.java      -> Token安全校验过滤器实现类
 
 ```
 
@@ -766,10 +766,10 @@ Watcher对Zookeeper节点进行监听，当事件发生后，并不是直接处�
 
 ```
 ├── rpc-consumer
-│   ├── ClientConfig.java		    -> 客户端配置属性类
-│   ├── PropertiesBootstrap.java    -> 用于设置配置并返回配置类对象	
-│   ├── PropertiesLoader.java		-> 用于从文件中读取加载配置
-│   └── ServerConfig.java			-> 服务端配置属性类
+│   ├── ClientConfig.java               -> 客户端配置属性类
+│   ├── PropertiesBootstrap.java        -> 用于设置配置并返回配置类对象	
+│   ├── PropertiesLoader.java           -> 用于从文件中读取加载配置
+│   └── ServerConfig.java               -> 服务端配置属性类
 ```
 
 # RPC项目bug记录
