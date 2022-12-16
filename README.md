@@ -1,4 +1,6 @@
+# RPC项目总体流程
 
+![rpc-process1](https://lty-image-bed.oss-cn-shenzhen.aliyuncs.com/blog/rpc-process1.png)
 
 # RPC项目树
 
@@ -615,7 +617,9 @@ NIO线程常见的阻塞情况，一共两大类：
 
 ### 8.2 超时重试机制
 
-TODO:
+反向代理在发送请求之后，会以异步或同步的方式等待结果返回。
+
+因此在反向代理等待请求返回的过程中，可以对请求超时与否进行判断，并根据可重发次数进行重新发送。
 
 ### 8.3 服务端流量控制
 
@@ -623,7 +627,36 @@ TODO:
 
 限制服务端的总体连接数，超过指定连接数时，拒绝剩余的连接请求。
 
-TODO:
+通过为ServerBootstrap设置最大连接数处理器，及时地对连接进行释放。
+
+最大连接数在服务端的配置文件中配置。
+
+```java
+bootstrap.handler(new MaxConnectionLimitHandler(serverConfig.getMaxConnections()));
+```
+
+```java
+Channel channel = (Channel) msg;
+int conn = numConnection.incrementAndGet();
+if (conn > 0 && conn <= maxConnectionNum) {
+    this.childChannel.add(channel);
+    channel.closeFuture().addListener(future -> {
+        childChannel.remove(channel);
+        numConnection.decrementAndGet();
+    });
+    super.channelRead(ctx, msg);
+} else {
+    numConnection.decrementAndGet();
+    //避免产生大量的time_wait连接
+    channel.config().setOption(ChannelOption.SO_LINGER, 0);
+    channel.unsafe().closeForcibly();
+    numDroppedConnections.increment();
+    //这里加入一道cas可以减少一些并发请求的压力,定期地执行一些日志打印
+    if (loggingScheduled.compareAndSet(false, true)) {
+        ctx.executor().schedule(this::writeNumDroppedConnectionLog,1, TimeUnit.SECONDS);
+    }
+}
+```
 
 #### 8.3.2 单服务限流
 
@@ -691,6 +724,7 @@ public void doFilter(RpcInvocation rpcInvocation) {
      -   初始化线程池、队列
      -   通过 `SPI` 初始化序列化框架、过滤链
      -   初始化并注册启动事件监听器
+
 2.   Spring从容器中筛选出带有 `@IRpcService` 注解的类，以Map形式封装
 3.   将每一个Map中的对象封装为 `ServiceWrapper` 对象，并从注解中提取并设置相应的属性，将service注册到注册中心
 4.   开启服务端，准备接收任务
